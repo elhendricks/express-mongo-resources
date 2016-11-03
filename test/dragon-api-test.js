@@ -25,10 +25,12 @@ describe('dragons', () => {
     });
 
     const request = chai.request(app);
+
+    
     
     //Marty has a pirate here
 
-    it('GET ALL', done => {
+    it.skip('GET ALL', done => {
         request
             .get(//route
             )
