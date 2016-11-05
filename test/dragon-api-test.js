@@ -26,17 +26,144 @@ describe('dragons', () => {
 
     const request = chai.request(app);
 
+    var pete = {name: 'Pete', treasure: 'silver', fire: true};
     
-    
-    //Marty has a pirate here
-
-    it.skip('GET ALL', done => {
+   
+// GET
+    it('GET ALL', done => {
         request
-            .get(//route
-            )
-            .then(
-                //assert and call done in here
-            )
+            .get('/dragons')
+            .then( res => {
+                assert.deepEqual(res.body, []);
+                done();
+            })
+                
             .catch(done);
-    })
+    });
+
+    it('gets by query string', done => {
+        var amethyst = {name: 'Amethyst', color: 'purple'};
+ 
+        request.post('/dragons').send(amethyst)
+        .then( () => {
+            request
+                .get('/dragons/?color=purple')
+                .then( res2 => {
+                    assert.equal(res2.body.length, 1);
+                    assert.equal(res2.body[0].name, 'Amethyst');
+                    done();
+                })
+                .catch(done);
+        });
+
+    });
+
+    it('GET by Id', done => {
+        var garnet = {
+            name: 'Garnet',
+            skin: 'red',
+            fire: true, 
+            treasure: ['gems', 'swords', 'shields']
+        };
+
+        request
+            .post('/dragons')
+            .send(garnet)
+            .then(res => { 
+                request
+                .get(`/dragons/${res.body._id}`)
+                .then(res2 => {
+                    assert.equal(res2.body.name, 'Garnet');
+                    done();
+                })
+                .catch(err => {
+                    done(err);
+                });    
+            })
+
+
+            .catch(done);
+    });
+
+// PUT
+
+    it('sends PUT request', done => {
+        var ruby = {
+            name: 'Ruby',
+            skin: 'red',
+            fire: true, 
+            treasure: ['gems', 'swords', 'shields']
+        };
+
+        request
+            .post('/dragons')
+            .send(ruby)
+            .then(res => { 
+                request
+                .put(`/dragons/${res.body._id}`)
+                .send({fire: false})
+                .then(res2 => {
+                    assert.equal(res2.body.fire, false);
+                    done();
+                })
+                .catch(err => {
+                    done(err);
+                });    
+            })
+            .catch(done);
+            
+    });
+
+// POST
+
+    it('sends POST request', done => {
+        request
+            .post('/dragons')
+            .send(pete)
+            .then(res => {
+                assert.isOk(res.body._id);
+                done();
+            })
+            .catch(done);
+    });
+
+// DELETE
+
+    it.only('deletes a record by id', done => {
+        var pearl = {
+            name: 'Pearl',
+            skin: 'white',
+            fire: true, 
+            treasure: ['gems', 'swords', 'shields']
+        };
+        var id;
+        var dragon;
+        request
+            .post('/dragons')
+            .send(pearl)
+            .then(res => { 
+                id = res.body._id;
+                request
+                    .get(`/dragons/${id}`)
+                    .then(res2 => {
+                        dragon = res.body;
+                        assert.equal(res2.body.name, 'Pearl');
+                    })
+                    .catch(err => {
+                        done(err);
+                    });    
+            })  
+            .then( () => {
+                request
+                    .delete(`/dragons/${id}`)
+                    .then( deleted => {
+                        assert.deepEqual(deleted.body, dragon);
+                        done();
+                    })
+                    .catch(err =>{
+                        done(err);
+                    });
+            })
+            .catch(done);
+    });
 });
