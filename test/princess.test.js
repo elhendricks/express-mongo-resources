@@ -38,8 +38,6 @@ describe('Princess model', () => {
             skill: 'motherhood'
         });
 
-        console.log(princess);
-
         princess.validate(err => {
             if (err) return done(err);
             assert.equal(princess.badass, false);

@@ -146,7 +146,7 @@ describe('dragons', () => {
                 request
                     .get(`/dragons/${id}`)
                     .then(res2 => {
-                        dragon = res.body;
+                        dragon = res2.body;
                         assert.equal(res2.body.name, 'Pearl');
                     })
                     .catch(err => {
@@ -158,6 +158,165 @@ describe('dragons', () => {
                     .delete(`/dragons/${id}`)
                     .then( deleted => {
                         assert.deepEqual(deleted.body, dragon);
+                        done();
+                    })
+                    .catch(err =>{
+                        done(err);
+                    });
+            })
+            .catch(done);
+    });
+
+});
+
+describe('princesses', () => {
+//before drop collection
+    before( done => {
+        const CONNECTED = 1;
+        if (connection.readyState === CONNECTED) dropCollection();
+        else connection.on('open', dropCollection);
+
+        function dropCollection(){
+            const name = 'princesses';
+            connection.db
+                .listCollections({ name })
+                .next( (err, collinfo) => {
+                    if (!collinfo) return done();
+                    connection.db.dropCollection(name, done);
+                });
+        }
+    });
+
+    const request = chai.request(app);
+
+
+// GET
+    it('GET ALL', done => {
+        request
+            .get('/princesses')
+            .then( res => {
+                assert.deepEqual(res.body, []);
+                done();
+            })
+                
+            .catch(done);
+    });
+
+    it('gets by query string', done => {
+        var amethyst = {name: 'Amethyst', skill: 'fencing'};
+
+        request.post('/princesses').send(amethyst)
+        .then( () => {
+            request
+                .get('/princesses/?skill=fencing')
+                .then( res2 => {
+                    assert.equal(res2.body.length, 1);
+                    assert.equal(res2.body[0].name, 'Amethyst');
+                    done();
+                })
+                .catch(done);
+        });
+
+    });
+
+    it('GET by Id', done => {
+        var garnet = {
+            name: 'Garnet',
+            skill: 'caring'
+        };
+
+        request
+            .post('/princesses')
+            .send(garnet)
+            .then(res => { 
+                request
+                .get(`/princesses/${res.body._id}`)
+                .then(res2 => {
+                    assert.equal(res2.body.name, 'Garnet');
+                    done();
+                })
+                .catch(err => {
+                    done(err);
+                });    
+            })
+
+
+            .catch(done);
+    });
+
+// PUT
+
+    it('sends PUT request', done => {
+        var ruby = {
+            name: 'Ruby',
+            badass: true
+        };
+
+        request
+            .post('/princesses')
+            .send(ruby)
+            .then(res => { 
+                request
+                .put(`/princesses/${res.body._id}`)
+                .send({badass: false})
+                .then(res2 => {
+                    assert.equal(res2.body.badass, false);
+                    done();
+                })
+                .catch(err => {
+                    done(err);
+                });    
+            })
+            .catch(done);
+            
+    });
+
+// POST
+
+    it('sends POST request', done => {
+
+        var chelsea = {name: 'Chelsea', badass: false};
+        request
+            .post('/princesses')
+            .send(chelsea)
+            .then(res => {
+                assert.isOk(res.body._id);
+                done();
+            })
+            .catch(done);
+    });
+
+// DELETE
+
+
+    it.skip('deletes a record by id', done => {
+        var pearl = {
+            name: 'Pearl',
+            skill: 'meditation'
+        };
+        var id, princess;
+        request
+            .post('/princesses')
+            .send(pearl)
+            .then(res => { 
+                id = res.body._id;
+                request
+                    .get(`/princesses/${id}`)
+                    .then(res2 => {
+                        princess = res2.body;
+                        console.log('princess ', princess);
+                        assert.equal(res2.body.name, 'Pearl');
+                    })
+                    .catch(err => {
+                        done(err);
+                    });    
+            })  
+            .then( () => {
+                request
+                    .delete(`/princesses/${id}`)
+                    .then( deleted => {
+                        console.log('princess 2', princess);
+                        assert.deepEqual(deleted.body, princess);
                         done();
                     })
                     .catch(err =>{
