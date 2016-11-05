@@ -129,7 +129,7 @@ describe('dragons', () => {
 
 // DELETE
 
-    it.only('deletes a record by id', done => {
+    it('deletes a record by id', done => {
         var pearl = {
             name: 'Pearl',
             skin: 'white',
